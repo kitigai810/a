@@ -4,11 +4,11 @@ GitHubやWebページのソース、貼り付けたHTML／コードを読み、G
 
 ## Vercelへデプロイ
 
-このフォルダーをGitHubリポジトリへpushし、Vercelで **Add New → Project** からそのリポジトリをImportします。Framework Presetは **Other**（静的ファイル＋Node.js Functions）で構いません。Build Commandは空欄、Output Directoryは空欄のままDeployします。画面・CSS・ブラウザー側JavaScriptはすべて単一の `index.html` に内蔵してあり、UI用の別ファイルやJS／CSS CDNは不要です。Gemini接続用のサーバー関数 `api/`、共通処理 `lib/`、`vercel.json` はリポジトリルートの構成を保ってください。
+このフォルダーをGitHubリポジトリへpushし、Vercelで **Add New → Project** からそのリポジトリをImportします。Framework Presetは **Other**（静的ファイル＋Node.js Functions）を選びます。`vercel.json`がOutput Directoryを `.` に指定します。画面・CSS・ブラウザー側JavaScriptはすべて単一の `index.html` に内蔵してあり、UI用の別ファイルやJS／CSS CDNは不要です。Gemini接続用のサーバー関数 `api/`、共通処理 `lib/`、`vercel.json` はリポジトリルートの構成を保ってください。ローカルPreviewサーバーはVercelが自動検出する `server.*` 名との衝突を避け、`preview-server.cjs` としています。
 
 ## WindowsからGitHubへ登録
 
-ZIPを展開し、先にGitHubで空のリポジトリを作成します。展開したフォルダー内の `setup-github.bat` を実行し、GitHubリポジトリURLを入力してください。Git for Windowsが必要です。Gitのユーザー名／メールアドレスが未設定の場合は、このプロジェクト用の設定を入力します。push後はVercelでそのリポジトリをImportします。
+ZIPを展開し、先にGitHubで空のリポジトリを作成します。展開したフォルダー内の `setup-github.bat` を実行し、GitHubリポジトリURLを入力してください。Git for Windowsが必要です。Gitのユーザー名／メールアドレスが未設定の場合は、このプロジェクト用の設定を入力します。既にこのアプリをGitHubへ登録済みで、VercelのRouting Fixを反映する場合は、ZIPを既存のリポジトリ作業フォルダーへ展開してファイルを上書きし、`.git`フォルダーを残したまま `fix-vercel-404.bat` を実行します。push後、Vercelは新しいデプロイを開始します。
 
 VercelのProject → **Settings → Environment Variables** で以下の2つを **Secret** として登録し、対象環境（Production、必要ならPreview／Development）を選んで保存します。その後、Redeployしてください。
 
@@ -23,7 +23,7 @@ Gemini APIの同じ利用プロジェクト内のAPIキーを2本作っても、
 
 ## ローカルPreview
 
-Node.js 20以降で `npm run dev` を実行し、`http://localhost:3000` を開きます。ローカルでもAPIを使う場合は、環境変数をシェルで設定するか、プロジェクトルートの `.env.local` を用意して `node --env-file=.env.local server.js` で起動します。`.env.local` はGitへ追加しないでください。
+Node.js 20以降で `npm run dev` を実行し、`http://localhost:3000` を開きます。ローカルでもAPIを使う場合は、環境変数をシェルで設定するか、プロジェクトルートの `.env.local` を用意して `node --env-file=.env.local preview-server.cjs` で起動します。`.env.local` はGitへ追加しないでください。
 
 ## 仕様と注意点
 

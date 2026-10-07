@@ -7,7 +7,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js"
+    "dev": "node preview-server.cjs",
+    "start": "node preview-server.cjs"
   }
 }
