@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171a1f">
+  <meta name="description" content="Webソースを読み、出典付きの提案を返すAIリサーチ端末。">
+  <title>Source AI — Research console</title>
+  <style>
+:root{color-scheme:dark;--bg:#171a1f;--sidebar:#13161a;--panel:#1b1f24;--panel-2:#20242a;--line:#30353c;--muted:#858d96;--text:#e6e8e9;--soft:#bec2c6;--amber:#d89a32;--amber-bright:#f2b94f;--green:#80b89d;--mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;--sans:'Noto Sans JP',system-ui,sans-serif}
+*{box-sizing:border-box}html,body{height:100%;margin:0}body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased}button,input,textarea{font:inherit}button{color:inherit}.app-shell{height:100dvh;min-height:580px;display:flex;overflow:hidden}.sidebar{width:258px;min-width:258px;background:var(--sidebar);border-right:1px solid #292e34;display:flex;flex-direction:column;padding:23px 16px 17px;z-index:4}.brand-row{height:47px;display:flex;align-items:center;gap:11px;padding:0 7px;margin-bottom:25px}.brand-mark{width:31px;height:31px;border:1px solid #64502c;border-radius:9px;position:relative;display:grid;place-items:center;background:linear-gradient(145deg,#27251f,#1c1c1a);color:var(--amber-bright);font-family:Georgia,serif;font-size:30px;line-height:1;overflow:hidden}.brand-mark span{transform:translateY(2px)}.brand-mark i{position:absolute;width:9px;height:1px;background:var(--amber-bright);right:5px;bottom:8px;box-shadow:0 0 8px #dfa943}.brand-word{font:600 13px var(--mono);letter-spacing:.09em;color:#e7e8e7}.brand-word>span{color:var(--amber-bright);margin-left:3px}.brand-word small{display:block;color:#78818a;font-size:8px;letter-spacing:.15em;margin-top:3px;font-weight:400}.new-chat-button{height:42px;border:1px solid #3c4147;background:#20242a;border-radius:8px;text-align:left;padding:0 11px;font-size:12px;font-weight:500;cursor:pointer;transition:background .16s,border-color .16s}.new-chat-button:hover{background:#292d32;border-color:#555b62}.plus{font-size:17px;color:var(--amber-bright);vertical-align:-1px;margin-right:7px}.new-chat-button kbd{float:right;font:10px var(--mono);color:#717982;background:#181b1f;border:1px solid #353a40;border-radius:4px;padding:2px 5px;margin-top:1px}.sidebar-section-label{display:flex;justify-content:space-between;padding:27px 9px 10px;color:#777f88;font:10px var(--mono);letter-spacing:.12em}.sidebar-section-label span:last-child{color:#5b626a}.session-list{display:flex;flex-direction:column;gap:4px;overflow:auto;flex:1}.empty-sessions{color:#727980;font-size:11px;padding:10px 9px;line-height:1.8}.session-item{display:flex;align-items:center;gap:7px;min-height:39px;padding:5px 8px 5px 10px;border-radius:6px;color:#adb2b8;font-size:11px;cursor:pointer;position:relative}.session-item:hover,.session-item.active{background:#22262b;color:#ededec}.session-item.active:before{content:"";position:absolute;left:0;width:2px;height:17px;background:var(--amber);border-radius:2px}.session-icon{font-family:var(--mono);color:#a68551;font-size:12px;width:15px}.session-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.delete-session{display:none;border:0;background:transparent;color:#828992;cursor:pointer;padding:3px 5px;border-radius:4px}.session-item:hover .delete-session{display:block}.delete-session:hover{color:#ff9d91;background:#353135}.sidebar-bottom{padding:14px 7px 0;border-top:1px solid #272b30}.storage-status{display:flex;align-items:center;gap:7px;color:#b3b8ba;font-size:10px}.pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px #6bb79270}.sidebar-note{font-size:10px;line-height:1.7;color:#747c84;margin-top:8px}.sidebar-link{display:inline-block;color:#aeb2b5;font:10px var(--mono);margin-top:13px;text-decoration:none}.sidebar-link:hover{color:var(--amber-bright)}.main-panel{flex:1;min-width:0;display:flex;flex-direction:column;position:relative;background:radial-gradient(ellipse at 52% -28%,#2a2b2860 0,transparent 57%),var(--bg)}.topbar{height:57px;border-bottom:1px solid #2a2e34;display:flex;align-items:center;justify-content:space-between;padding:0 31px;flex-shrink:0}.breadcrumb{font-size:11px;color:#d1d3d3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.crumb-muted{font:10px var(--mono);color:#7a828b;letter-spacing:.07em}.slash{color:#535a61;padding:0 10px}.topbar-right{display:flex;align-items:center;gap:19px}.model-badge{display:flex;align-items:center;gap:6px;padding-left:16px;border-left:1px solid #33383e;color:#abb0b4;font:9px var(--mono);letter-spacing:.035em;white-space:nowrap}.model-spark{color:var(--amber-bright);font-size:13px}.search-switch{display:flex;align-items:center;gap:8px;cursor:pointer;color:#bec2c4;font-size:10px}.search-switch input{position:absolute;opacity:0;width:1px;height:1px}.switch-track{width:26px;height:15px;border-radius:12px;background:#42474e;position:relative;transition:background .18s}.switch-track:after{content:"";position:absolute;left:2px;top:2px;width:11px;height:11px;background:#aab0b4;border-radius:50%;transition:transform .18s}.search-switch input:checked+.switch-track{background:#76561e}.search-switch input:checked+.switch-track:after{transform:translateX(11px);background:#ffd478}.search-switch input:focus-visible+.switch-track{outline:2px solid var(--amber);outline-offset:2px}.search-glyph{font-size:14px;color:var(--amber-bright);vertical-align:-1px;margin-right:2px}.workspace{flex:1;min-height:0;overflow-y:auto;scrollbar-color:#444a52 transparent;scrollbar-width:thin}.welcome-panel{width:min(680px,calc(100% - 40px));margin:clamp(45px,8.4vh,105px) auto 42px;text-align:center;animation:rise .4s ease both}.eyebrow{font:9px var(--mono);letter-spacing:.19em;color:#8b9092;display:flex;align-items:center;justify-content:center;gap:12px}.eyebrow-line{width:24px;height:1px;background:#625536}.hero-symbol{width:60px;height:60px;margin:28px auto 18px;border:1px solid #574a32;border-radius:17px;display:flex;align-items:center;justify-content:center;position:relative;background:linear-gradient(150deg,#292820,#1b1d1f);box-shadow:0 11px 35px #0004}.hero-quote{font:54px Georgia,serif;color:var(--amber-bright);transform:translateY(6px)}.hero-cursor{width:9px;height:1px;background:#f6c361;position:absolute;right:11px;bottom:17px;box-shadow:0 0 9px #f3ba58}.welcome-panel h1{font-weight:500;font-size:clamp(25px,3vw,34px);letter-spacing:-.055em;margin:0;color:#e9e9e7}.welcome-panel h1 em{font-style:normal;color:var(--amber-bright)}.hero-description{color:#989fa3;font-size:12px;line-height:1.9;margin:12px 0 26px}.suggestions{display:flex;flex-direction:column;gap:8px;width:min(440px,100%);margin:0 auto}.suggestion{display:flex;align-items:center;gap:11px;text-align:left;width:100%;border:1px solid #343940;background:#1b1f23;border-radius:7px;padding:11px 13px;color:#bdc1c2;font-size:11px;cursor:pointer;transition:border .16s,background .16s,transform .16s}.suggestion:hover{border-color:#72572b;background:#22231f;transform:translateX(2px)}.suggestion-icon{width:22px;height:22px;border-radius:5px;display:grid;place-items:center;background:#2c2a23;color:#d8b46d;font:12px var(--mono)}.suggestion .arrow{margin-left:auto;color:#777d80}.welcome-foot{margin-top:21px;color:#717980;font-size:10px}.amber-tick{display:inline-block;width:13px;height:2px;background:var(--amber);vertical-align:middle;margin-right:5px}.conversation{width:min(820px,calc(100% - 44px));margin:26px auto 50px;display:flex;flex-direction:column;gap:22px}.conversation:empty{display:none}.message{display:flex;gap:12px;align-items:flex-start;animation:rise .22s ease both}.message-avatar{width:27px;height:27px;flex-shrink:0;border:1px solid #4b402c;border-radius:8px;background:#25231e;color:var(--amber-bright);display:grid;place-items:center;font:16px Georgia,serif}.message.user .message-avatar{border-color:#39454a;background:#20262a;color:#bec9cb;font:10px var(--mono)}.message-content{min-width:0;flex:1}.message-meta{display:flex;align-items:center;gap:8px;margin:2px 0 7px;color:#8c9499;font:9px var(--mono);letter-spacing:.045em}.message.user .message-meta{color:#7f999f}.message-body{color:#d4d6d5;font-size:12px;line-height:1.85;overflow-wrap:anywhere}.message-body p{margin:7px 0 12px}.message-body h1,.message-body h2,.message-body h3,.message-body h4{color:#eeece6;font-weight:600;line-height:1.5;margin:21px 0 9px}.message-body h1{font-size:20px}.message-body h2{font-size:17px;padding-bottom:6px;border-bottom:1px solid #34383c}.message-body h3{font-size:14px}.message-body a{color:#efbd61;text-decoration:underline;text-decoration-color:#af884b80;text-underline-offset:3px}.message-body ul,.message-body ol{padding-left:22px;margin:8px 0 14px}.message-body li{padding:2px 0}.message-body blockquote{margin:12px 0;padding:3px 13px;border-left:2px solid var(--amber);color:#aeb3b2;background:#1c201f}.message-body :not(pre)>code{font:11px var(--mono);color:#f0c773;background:#292720;padding:2px 5px;border-radius:4px}.message-body pre{background:#111417;border:1px solid #2e3338;border-radius:7px;padding:13px 15px;overflow:auto}.message-body pre code{font:11px/1.7 var(--mono);color:#d5d7d7}.message-body table{border-collapse:collapse;width:100%;font-size:11px;margin:12px 0}.message-body th,.message-body td{border:1px solid #3a3e43;padding:7px 9px;text-align:left}.message-body th{background:#25282b;color:#f0d08e}.message-body hr{border:0;border-top:1px solid #363b40;margin:18px 0}.message-body img{max-width:100%}.message-tools{display:flex;align-items:center;gap:9px;margin-top:10px}.copy-answer{border:1px solid #363a3e;border-radius:5px;padding:4px 8px;background:#202428;color:#959b9e;font-size:10px;cursor:pointer}.copy-answer:hover{color:#f1d08e;border-color:#69552f}.citations{margin-top:13px;padding:10px 12px;border:1px solid #373b3e;border-radius:7px;background:#1b1e20}.citations-heading{font:9px var(--mono);letter-spacing:.08em;color:#b9a16e;margin-bottom:7px}.citation-list{display:flex;flex-wrap:wrap;gap:6px}.citation-link{display:inline-flex;gap:5px;align-items:center;max-width:100%;color:#adb7b6;text-decoration:none;border:1px solid #383e3d;background:#202523;padding:4px 7px;border-radius:5px;font-size:10px}.citation-link:hover{color:#f3c66f;border-color:#766039}.citation-link span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.message-status{color:#81888b;font-size:10px;margin-top:7px}.stream-cursor:after{content:"";display:inline-block;width:6px;height:13px;background:var(--amber);margin-left:4px;vertical-align:-2px;animation:blink .9s steps(1) infinite}.source-context{width:min(760px,calc(100% - 44px));height:34px;display:flex;align-items:center;gap:7px;padding:0 10px;margin:0 auto 7px;background:#25231d;border:1px solid #514329;border-radius:7px;color:#d1b16f;font-size:10px}.source-context[hidden]{display:none}.source-context-mark{font:14px var(--mono)}.source-context-label{font:9px var(--mono);color:#93866b;letter-spacing:.06em}.source-context-name{color:#dfd5ba;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.context-remove{border:0;background:transparent;color:#9b9485;cursor:pointer;font-size:17px;line-height:1}.composer-wrap{width:min(760px,calc(100% - 44px));margin:0 auto;padding:0 0 10px;flex-shrink:0}.composer{border:1px solid #454a4f;border-radius:11px;background:#202429;box-shadow:0 13px 38px #0003;transition:border-color .18s}.composer:focus-within{border-color:#75603a}.composer-tools{height:36px;display:flex;align-items:center;gap:12px;padding:0 12px;border-bottom:1px solid #33383e}.url-entry{display:flex;align-items:center;gap:7px;min-width:0;flex:1;color:#caa24e}.url-icon{font-size:14px}.url-entry input{width:100%;min-width:0;background:transparent;border:0;outline:none;color:#e1e2df;font:10px var(--mono)}.url-entry input::placeholder{color:#777f85}.tool-divider{width:1px;height:15px;background:#41464b}.attach-button{cursor:pointer;color:#afb4b6;font-size:10px;white-space:nowrap}.attach-button span{font-size:15px;color:#e3bd6c;vertical-align:-1px}.attach-button:hover{color:#f2d28d}.size-note{font:9px var(--mono);color:#727b81;white-space:nowrap}.composer>textarea{display:block;width:100%;min-height:57px;max-height:180px;resize:vertical;background:transparent;border:0;outline:0;color:#e8e7e2;font-size:12px;line-height:1.8;padding:11px 14px}.composer>textarea::placeholder{color:#858c91}.composer-bottom{min-height:38px;display:flex;justify-content:space-between;align-items:center;padding:2px 10px 8px 13px}.paste-code{border:0;background:transparent;color:#aeb2b2;font-size:10px;cursor:pointer;padding:5px 0}.paste-code:hover{color:#f2cb7b}.code-icon{font:10px var(--mono);color:#d9b86d;margin-right:5px}.size-caption{color:#777e82}.composer-actions{display:flex;align-items:center;gap:10px}.enter-hint{color:#737a7f;font:9px var(--mono)}.send-button{width:29px;height:29px;border:0;border-radius:8px;background:var(--amber);color:#191a1b;font-size:18px;line-height:1;cursor:pointer;transition:background .15s,transform .15s}.send-button:hover{background:#efb54c;transform:translateY(-1px)}.send-button:disabled{background:#5c513b;color:#aaa08c;cursor:wait}.send-button.stop{background:#a14f42;color:white}.code-input-wrap{border-top:1px solid #353a3f;padding:8px 12px 11px}.code-input-head{display:flex;justify-content:space-between;color:#a6aaa8;font:9px var(--mono);padding-bottom:6px}.code-input-head span:last-child{color:#777e80}.code-input-wrap textarea{width:100%;height:105px;resize:vertical;background:#171a1d;border:1px solid #34393d;border-radius:6px;outline:0;padding:9px;color:#d5d8d6;font:10px/1.6 var(--mono)}.code-input-wrap textarea:focus{border-color:#75603a}.composer-disclaimer{text-align:center;color:#6d757b;font-size:9px;margin:8px 0 0}.toast{position:fixed;z-index:20;left:50%;bottom:30px;transform:translate(-50%,10px);opacity:0;pointer-events:none;background:#2e312f;border:1px solid #5d5237;border-radius:7px;padding:9px 15px;color:#efe2be;font-size:11px;box-shadow:0 6px 25px #0006;transition:all .2s}.toast.visible{opacity:1;transform:translate(-50%,0)}.mobile-menu,.mobile-close,.mobile-backdrop{display:none}@keyframes blink{50%{opacity:0}}@keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}@media(max-width:760px){.sidebar{position:fixed;inset:0 auto 0 0;width:min(290px,84vw);transform:translateX(-102%);transition:transform .2s;box-shadow:14px 0 40px #0004}.sidebar.open{transform:translateX(0)}.mobile-backdrop.visible{display:block;position:fixed;inset:0;background:#080a0dcc;z-index:3}.mobile-menu{display:inline-grid;margin-right:8px}.mobile-close{display:inline-grid;margin-left:auto}.topbar{padding:0 14px;height:52px}.topbar-right{gap:11px}.model-badge{font-size:0;border:0;padding:0}.model-spark{font-size:15px}.search-label{font-size:0}.search-glyph{font-size:16px}.welcome-panel{margin-top:7vh}.hero-description{font-size:11px}.composer-wrap,.conversation,.source-context{width:calc(100% - 24px)}.composer-tools{gap:8px;padding:0 9px}.attach-button{font-size:0}.attach-button span{font-size:18px}.size-note{font-size:8px}.composer>textarea{font-size:12px}.enter-hint{display:none}.workspace{overscroll-behavior:contain}.message-body{font-size:12px}}@media(max-height:760px) and (min-width:761px){.welcome-panel{margin-top:40px}.hero-symbol{margin-top:18px;margin-bottom:13px}.welcome-panel h1{font-size:29px}.hero-description{margin:8px 0 18px}.suggestion{padding:8px 12px}.welcome-foot{margin-top:14px}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="会話履歴">
+      <div class="brand-row">
+        <div class="brand-mark" aria-hidden="true"><span>“</span><i></i></div>
+        <div class="brand-word">SOURCE<span>AI</span><small>RESEARCH CONSOLE</small></div>
+        <button class="icon-button mobile-close" id="closeSidebar" aria-label="履歴を閉じる">×</button>
+      </div>
+      <button class="new-chat-button" id="newChat"><span class="plus">＋</span> 新しい調査 <kbd>⌘ K</kbd></button>
+      <div class="sidebar-section-label"><span>WORKSPACE</span><span id="sessionCount">00</span></div>
+      <nav class="session-list" id="sessionList" aria-label="保存した会話"></nav>
+      <div class="sidebar-bottom">
+        <div class="storage-status"><span class="pulse-dot"></span><span>このブラウザに保存</span></div>
+        <div class="sidebar-note">会話は端末のブラウザ内に残ります。APIキーはサーバー側だけで使用されます。</div>
+        <a class="sidebar-link" href="https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite" target="_blank" rel="noopener noreferrer">Gemini 3.1 Flash-Lite ↗</a>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" id="openSidebar" aria-label="履歴を開く">☰</button>
+        <div class="breadcrumb"><span class="crumb-muted">SOURCE AI</span><span class="slash">/</span><span id="currentTitle">新しい調査</span></div>
+        <div class="topbar-right">
+          <label class="search-switch"><input type="checkbox" id="searchToggle" checked><span class="switch-track"></span><span class="search-label"><span class="search-glyph">⌕</span> Web検索</span></label>
+          <span class="model-badge"><span class="model-spark">✳</span> GEMINI 3.1 FLASH-LITE</span>
+        </div>
+      </header>
+
+      <section class="workspace" id="workspace">
+        <div class="welcome-panel" id="welcomePanel">
+          <div class="eyebrow"><span class="eyebrow-line"></span> SOURCE-LED RESEARCH <span class="eyebrow-line"></span></div>
+          <div class="hero-symbol" aria-hidden="true"><span class="hero-quote">“</span><span class="hero-cursor"></span></div>
+          <h1>ソースから、<em>答え</em>を見つける。</h1>
+          <p class="hero-description">URLやコードを読み込んで、根拠のある攻略法・分析・提案へ。</p>
+          <div class="suggestions" aria-label="質問例">
+            <button class="suggestion" data-prompt="このゲームの攻略法を、コードの仕組みを根拠に教えてください。"><span class="suggestion-icon">⌘</span><span>ゲームの攻略法を分析</span><span class="arrow">↗</span></button>
+            <button class="suggestion" data-prompt="このコードの構造を説明し、改善できる点を優先度順に提案してください。"><span class="suggestion-icon">⌁</span><span>コードの改善点を探す</span><span class="arrow">↗</span></button>
+            <button class="suggestion" data-prompt="ソースを読んで、重要な処理と根拠となる箇所を要約してください。"><span class="suggestion-icon">≡</span><span>ソースの要点をまとめる</span><span class="arrow">↗</span></button>
+          </div>
+          <div class="welcome-foot"><span class="amber-tick"></span> 調査したいURL、またはコードを添えて質問してください。</div>
+        </div>
+        <div class="conversation" id="conversation" aria-live="polite" aria-label="会話"></div>
+      </section>
+
+      <footer class="composer-wrap">
+        <div class="source-context" id="sourceContext" hidden>
+          <span class="source-context-mark">⌁</span><span class="source-context-label">参照ソース</span><span class="source-context-name" id="sourceContextName"></span>
+          <button class="context-remove" id="clearSource" aria-label="参照ソースを解除">×</button>
+        </div>
+        <form class="composer" id="composer">
+          <div class="composer-tools">
+            <label class="url-entry"><span class="url-icon">↗</span><input id="sourceUrl" type="url" inputmode="url" placeholder="https://github.com/... — URLからソースを取得" autocomplete="url" aria-label="ソースURL"></label>
+            <div class="tool-divider"></div>
+            <label class="attach-button" for="fileInput" title="テキスト／コードファイルを添付"><span>＋</span> ファイルを添付<input id="fileInput" type="file" accept=".html,.htm,.txt,.md,.js,.jsx,.ts,.tsx,.css,.json,.py,.go,.rs,.c,.cpp,.java,.php,.vue,.svelte,.xml,.yaml,.yml,.toml,.sh,text/*,application/json" hidden></label>
+            <span class="size-note">最大 1 MB</span>
+          </div>
+          <textarea id="question" rows="2" maxlength="20000" placeholder="何を調べますか？  ソースコードを貼り付けるときは「＋ ファイルを添付」または下の「コードを貼り付け」を使えます。" aria-label="質問" required></textarea>
+          <div class="composer-bottom">
+            <button class="paste-code" type="button" id="toggleCode"><span class="code-icon">&lt;/&gt;</span> コードを貼り付け <span class="size-caption">（最大 1 MB）</span></button>
+            <div class="composer-actions"><span class="enter-hint">↵ 送信</span><button class="send-button" id="sendButton" type="submit" aria-label="送信"><span id="sendIcon">↑</span></button></div>
+          </div>
+          <div class="code-input-wrap" id="codeWrap" hidden><div class="code-input-head"><span>ソースコード</span><span id="codeCount">0 / 1 MB</span></div><textarea id="sourceCode" spellcheck="false" placeholder="HTML / JavaScript / その他のコードをここに貼り付け…" aria-label="参照コード"></textarea></div>
+        </form>
+        <p class="composer-disclaimer">AIの回答は参考情報です。重要な判断は元ソースと照らし合わせてください。</p>
+      </footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="mobile-backdrop" id="backdrop"></div>
+  <script>
+'use strict';
+(() => {
+  const STORAGE_KEY = 'sourceai.research.v1';
+  const MAX_BYTES = 1024 * 1024;
+  const $ = id => document.getElementById(id);
+  const els = {
+    sessionList: $('sessionList'), sessionCount: $('sessionCount'), newChat: $('newChat'),
+    title: $('currentTitle'), welcome: $('welcomePanel'), conversation: $('conversation'),
+    composer: $('composer'), question: $('question'), sourceUrl: $('sourceUrl'), file: $('fileInput'),
+    code: $('sourceCode'), codeWrap: $('codeWrap'), codeCount: $('codeCount'), toggleCode: $('toggleCode'),
+    send: $('sendButton'), sendIcon: $('sendIcon'), search: $('searchToggle'),
+    context: $('sourceContext'), contextName: $('sourceContextName'), clearSource: $('clearSource'),
+    toast: $('toast'), sidebar: $('sidebar'), backdrop: $('backdrop')
+  };
+  let state = loadState();
+  let controller = null;
+  let busy = false;
+  let toastTimer = null;
+  let saveTimer = null;
+  let expandedCode = false;
+
+  function makeSession() {
+    return { id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, title: '新しい調査', updatedAt: Date.now(), messages: [], source: null };
+  }
+  function loadState() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      const sessions = Array.isArray(parsed.sessions) ? parsed.sessions.filter(s => s && typeof s.id === 'string' && Array.isArray(s.messages)) : [];
+      return { sessions: sessions.slice(0, 30), currentId: parsed.currentId || null };
+    } catch { return { sessions: [], currentId: null }; }
+  }
+  function current() {
+    let s = state.sessions.find(item => item.id === state.currentId);
+    if (!s) { s = makeSession(); state.sessions.unshift(s); state.currentId = s.id; }
+    return s;
+  }
+  function saveState() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try {
+        state.sessions.forEach(s => {
+          s.messages = (s.messages || []).slice(-100);
+          if (s.source && typeof s.source.text === 'string' && new TextEncoder().encode(s.source.text).length > MAX_BYTES) s.source.text = '';
+        });
+        state.sessions.sort((a, b) => b.updatedAt - a.updatedAt);
+        state.sessions = state.sessions.slice(0, 30);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        renderSessions();
+      } catch { showToast('保存容量がいっぱいです。古い会話を削除してください。'); }
+    }, 180);
+  }
+  function showToast(text) {
+    els.toast.textContent = text;
+    els.toast.classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => els.toast.classList.remove('visible'), 2800);
+  }
+  function escapeHTML(text) {
+    return String(text).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+  }
+  function markdownHTML(text) {
+    const root = document.createElement('div');
+    const lines = String(text || '').replace(/\r\n?/g, '\n').split('\n');
+    const inline = (parent, value) => {
+      const pattern = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)|`([^`]+)`|\*\*([^*]+)\*\*|__([^_]+)__|~~(.+?)~~|\*([^*\n]+)\*|_([^_\n]+)_/g;
+      let last = 0; let match;
+      while ((match = pattern.exec(value))) {
+        if (match.index > last) parent.append(document.createTextNode(value.slice(last, match.index)));
+        let element;
+        if (match[1]) {
+          try {
+            const url = new URL(match[2]);
+            if (url.protocol === 'https:' || url.protocol === 'http:') {
+              element = document.createElement('a'); element.href = url.href; element.target = '_blank'; element.rel = 'noopener noreferrer'; element.textContent = match[1];
+            }
+          } catch { /* Unsafe or invalid Markdown links are rendered as text. */ }
+          if (!element) element = document.createTextNode(match[0]);
+        } else if (match[3]) { element = document.createElement('code'); element.textContent = match[3]; }
+        else if (match[4] || match[5]) { element = document.createElement('strong'); element.textContent = match[4] || match[5]; }
+        else if (match[6]) { element = document.createElement('del'); element.textContent = match[6]; }
+        else { element = document.createElement('em'); element.textContent = match[7] || match[8]; }
+        parent.append(element); last = pattern.lastIndex;
+      }
+      if (last < value.length) parent.append(document.createTextNode(value.slice(last)));
+    };
+    const isDivider = line => /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+    const cells = line => line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(cell => cell.trim());
+    const isBlockStart = line => /^(#{1,6}\s|```|\s*>|\s*([-*+]|\d+[.)])\s+|\s*([-*_])\s*\3\s*\3\s*$)/.test(line);
+    for (let i = 0; i < lines.length;) {
+      const line = lines[i];
+      if (!line.trim()) { i++; continue; }
+      if (/^\s*```/.test(line)) {
+        const language = line.trim().slice(3).trim().replace(/[^a-zA-Z0-9_-]/g, '');
+        const codeLines = []; i++;
+        while (i < lines.length && !/^\s*```/.test(lines[i])) codeLines.push(lines[i++]);
+        if (i < lines.length) i++;
+        const pre = document.createElement('pre'); const code = document.createElement('code');
+        if (language) code.className = `language-${language}`;
+        code.textContent = codeLines.join('\n'); pre.append(code); root.append(pre); continue;
+      }
+      const heading = line.match(/^(#{1,6})\s+(.+)$/);
+      if (heading) { const h = document.createElement(`h${heading[1].length}`); inline(h, heading[2].replace(/\s+#+\s*$/, '')); root.append(h); i++; continue; }
+      if (/^\s*([-*_])(?:\s*\1){2,}\s*$/.test(line)) { root.append(document.createElement('hr')); i++; continue; }
+      if (i + 1 < lines.length && line.includes('|') && isDivider(lines[i + 1])) {
+        const table = document.createElement('table'); const thead = document.createElement('thead'); const tr = document.createElement('tr');
+        cells(line).forEach(value => { const th = document.createElement('th'); inline(th, value); tr.append(th); });
+        thead.append(tr); table.append(thead); i += 2; const tbody = document.createElement('tbody');
+        while (i < lines.length && lines[i].includes('|') && lines[i].trim()) {
+          const row = document.createElement('tr'); cells(lines[i++]).forEach(value => { const td = document.createElement('td'); inline(td, value); row.append(td); }); tbody.append(row);
+        }
+        table.append(tbody); root.append(table); continue;
+      }
+      if (/^\s*>/.test(line)) {
+        const quote = document.createElement('blockquote'); const p = document.createElement('p'); const parts = [];
+        while (i < lines.length && /^\s*>/.test(lines[i])) parts.push(lines[i++].replace(/^\s*>\s?/, ''));
+        inline(p, parts.join(' ')); quote.append(p); root.append(quote); continue;
+      }
+      const listItem = line.match(/^\s*([-*+]|\d+[.)])\s+(.+)$/);
+      if (listItem) {
+        const ordered = /^\d/.test(listItem[1]); const list = document.createElement(ordered ? 'ol' : 'ul');
+        while (i < lines.length) {
+          const item = lines[i].match(/^\s*([-*+]|\d+[.)])\s+(.+)$/);
+          if (!item || /^\d/.test(item[1]) !== ordered) break;
+          const li = document.createElement('li'); inline(li, item[2]); list.append(li); i++;
+        }
+        root.append(list); continue;
+      }
+      const paragraph = document.createElement('p'); const parts = [];
+      while (i < lines.length && lines[i].trim() && !isBlockStart(lines[i]) && !(i + 1 < lines.length && lines[i].includes('|') && isDivider(lines[i + 1]))) parts.push(lines[i++]);
+      if (!parts.length) { parts.push(lines[i++]); }
+      inline(paragraph, parts.join(' ')); root.append(paragraph);
+    }
+    return root.innerHTML;
+  }
+  function hostOf(url) {
+    try { return new URL(url).hostname; } catch { return url; }
+  }
+  function renderCitations(citations) {
+    if (!Array.isArray(citations) || !citations.length) return '';
+    const items = citations.slice(0, 12).filter(c => c && /^https?:\/\//i.test(c.url || '')).map(c => `<a class="citation-link" href="${escapeHTML(c.url)}" target="_blank" rel="noopener noreferrer"><b>↗</b><span>${escapeHTML(c.title || hostOf(c.url))}</span></a>`).join('');
+    return items ? `<div class="citations"><div class="citations-heading">WEB SOURCES · ${citations.length}</div><div class="citation-list">${items}</div></div>` : '';
+  }
+  function renderMessage(message) {
+    const isUser = message.role === 'user';
+    const article = document.createElement('article');
+    article.className = `message ${isUser ? 'user' : 'assistant'}`;
+    article.dataset.messageId = message.id;
+    article.innerHTML = `<div class="message-avatar" aria-hidden="true">${isUser ? 'YOU' : '“'}</div><div class="message-content"><div class="message-meta"><span>${isUser ? 'あなた' : 'SOURCE AI'}</span><span>·</span><time>${new Date(message.createdAt || Date.now()).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}</time></div><div class="message-body"></div><div class="message-extra"></div></div>`;
+    updateMessageNode(article, message);
+    return article;
+  }
+  function updateMessageNode(node, message) {
+    const body = node.querySelector('.message-body');
+    if (message.role === 'user') body.textContent = message.content || '';
+    else {
+      body.innerHTML = markdownHTML(message.content || '');
+      body.classList.toggle('stream-cursor', !!message.streaming);
+    }
+    const extra = node.querySelector('.message-extra');
+    extra.innerHTML = `${message.status ? `<div class="message-status">${escapeHTML(message.status)}</div>` : ''}${message.role === 'assistant' ? renderCitations(message.citations) : ''}${message.role === 'assistant' && !message.streaming && message.content ? '<div class="message-tools"><button class="copy-answer" type="button">回答をコピー</button></div>' : ''}`;
+  }
+  function renderConversation() {
+    const s = current();
+    els.conversation.replaceChildren(...s.messages.map(renderMessage));
+    els.welcome.hidden = s.messages.length > 0;
+    els.title.textContent = s.title || '新しい調査';
+    updateSourceBadge();
+    els.workspaceScrollToEnd?.();
+    els.conversation.scrollIntoView({ block: 'end', behavior: 'smooth' });
+  }
+  function updateSourceBadge() {
+    const source = current().source;
+    els.context.hidden = !source;
+    if (source) {
+      els.contextName.textContent = `${source.label || '添付ソース'}${source.text ? ` · ${(new TextEncoder().encode(source.text).length / 1024).toFixed(0)} KB` : ''}`;
+      if (expandedCode) els.code.value = source.text || '';
+    }
+  }
+  function renderSessions() {
+    const items = [...state.sessions].sort((a, b) => b.updatedAt - a.updatedAt);
+    els.sessionCount.textContent = String(items.length).padStart(2, '0');
+    els.sessionList.replaceChildren();
+    if (!items.length) {
+      const empty = document.createElement('div'); empty.className = 'empty-sessions'; empty.textContent = '保存された会話はここに表示されます。'; els.sessionList.append(empty); return;
+    }
+    for (const s of items) {
+      const row = document.createElement('div');
+      row.className = `session-item${s.id === state.currentId ? ' active' : ''}`;
+      row.setAttribute('role', 'button'); row.tabIndex = 0;
+      const icon = document.createElement('span'); icon.className = 'session-icon'; icon.textContent = '⌁';
+      const title = document.createElement('span'); title.className = 'session-title'; title.textContent = s.title || '新しい調査'; title.title = title.textContent;
+      const del = document.createElement('button'); del.className = 'delete-session'; del.type = 'button'; del.setAttribute('aria-label', `${s.title || '会話'}を削除`); del.textContent = '×';
+      row.append(icon, title, del);
+      const open = () => { if (busy) return showToast('回答の生成が終わってから切り替えてください。'); state.currentId = s.id; expandedCode = false; els.codeWrap.hidden = true; renderConversation(); renderSessions(); closeSidebar(); };
+      row.addEventListener('click', e => { if (e.target !== del) open(); });
+      row.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+      del.addEventListener('click', e => { e.stopPropagation(); if (busy) return showToast('回答の生成が終わってから削除してください。'); state.sessions = state.sessions.filter(x => x.id !== s.id); if (state.currentId === s.id) state.currentId = state.sessions[0]?.id || null; current(); saveState(); renderConversation(); renderSessions(); });
+      els.sessionList.append(row);
+    }
+  }
+  function setBusy(value) {
+    busy = value;
+    els.send.classList.toggle('stop', value);
+    els.send.title = value ? '生成を停止' : '送信';
+    els.send.setAttribute('aria-label', value ? '生成を停止' : '送信');
+    els.sendIcon.textContent = value ? '■' : '↑';
+    els.question.placeholder = value ? '回答を生成中です。停止するにはボタンを押してください。' : '何を調べますか？  ソースコードを貼り付けるときは「＋ ファイルを添付」または下の「コードを貼り付け」を使えます。';
+  }
+  function updateCodeCount() {
+    const count = new TextEncoder().encode(els.code.value).length;
+    els.codeCount.textContent = `${(count / 1024).toFixed(0)} KB / 1 MB`;
+    els.codeCount.style.color = count > MAX_BYTES ? '#ff8f7b' : '';
+  }
+  function makeId() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`; }
+  function addMessage(role, content, extra = {}) {
+    const message = { id: makeId(), role, content, createdAt: Date.now(), ...extra };
+    const s = current(); s.messages.push(message); s.updatedAt = Date.now();
+    if (role === 'user' && (s.title === '新しい調査' || !s.title)) s.title = content.replace(/\s+/g, ' ').slice(0, 34) || '新しい調査';
+    els.welcome.hidden = true;
+    els.conversation.append(renderMessage(message));
+    els.conversation.lastElementChild?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    saveState(); return message;
+  }
+  async function fetchSource(url) {
+    const res = await fetch('/api/fetch', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url }) });
+    let data;
+    try { data = await res.json(); } catch { throw new Error('ソース取得APIの応答を読み取れませんでした。'); }
+    if (!res.ok) throw new Error(data.error || `ソース取得に失敗しました（${res.status}）。`);
+    if (new TextEncoder().encode(data.source || '').length > MAX_BYTES) throw new Error('取得したソースが1 MBを超えています。');
+    return data;
+  }
+  async function streamAnswer(question, source) {
+    const s = current();
+    const history = s.messages.filter(m => ['user', 'assistant'].includes(m.role) && m.content).slice(-16).map(m => ({ role: m.role, content: m.content }));
+    const answer = addMessage('assistant', '', { streaming: true });
+    const node = els.conversation.querySelector(`[data-message-id="${CSS.escape(answer.id)}"]`);
+    controller = new AbortController();
+    const response = await fetch('/api/chat', {
+      method: 'POST', headers: { 'content-type': 'application/json' }, signal: controller.signal,
+      body: JSON.stringify({ question, source: source?.text || '', sourceLabel: source?.label || '', sourceUrl: source?.url || '', history: history.slice(0, -1), searchWeb: els.search.checked })
+    });
+    if (!response.ok) {
+      let data = {};
+      try { data = await response.json(); } catch { /* The gateway may send plain text. */ }
+      s.messages = s.messages.filter(m => m.id !== answer.id);
+      if (node) node.remove();
+      saveState();
+      throw new Error(data.error || `Gemini APIへの接続に失敗しました（${response.status}）。`);
+    }
+    if (!response.body) throw new Error('このブラウザではストリーミングを利用できません。');
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let pending = '';
+    let eventName = 'message';
+    let lastSave = 0;
+    const onEvent = event => {
+      if (event.name === 'token') {
+        answer.content += event.data.text || '';
+        answer.streaming = true;
+        if (node) updateMessageNode(node, answer);
+        const now = Date.now();
+        if (now - lastSave > 900) { saveState(); lastSave = now; }
+        node?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      } else if (event.name === 'citations') answer.citations = event.data.citations || [];
+      else if (event.name === 'error') throw new Error(event.data.error || 'ストリームにエラーが発生しました。');
+    };
+    function parseFrame(frame) {
+      if (!frame.trim()) return;
+      let name = 'message'; let data = '';
+      for (const line of frame.split('\n')) {
+        if (line.startsWith('event:')) name = line.slice(6).trim();
+        else if (line.startsWith('data:')) data += line.slice(5).trim();
+      }
+      if (name === 'done') return;
+      try { onEvent({ name, data: data ? JSON.parse(data) : {} }); }
+      catch (error) { if (error instanceof Error && error.message) throw error; }
+    }
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        pending += decoder.decode(value || new Uint8Array(), { stream: !done });
+        const frames = pending.split(/\r?\n\r?\n/);
+        pending = frames.pop() || '';
+        for (const frame of frames) parseFrame(frame);
+        if (done) break;
+      }
+      if (pending.trim()) parseFrame(pending);
+      if (!answer.content && !controller.signal.aborted) throw new Error('AIから回答が返りませんでした。もう一度お試しください。');
+      answer.streaming = false;
+      answer.status = controller.signal.aborted ? '生成を停止しました。続きは質問欄から依頼できます。' : '';
+      if (node) updateMessageNode(node, answer);
+    } catch (error) {
+      answer.streaming = false;
+      answer.status = answer.content ? '接続が中断されました。ここまでの回答を保存しました。' : '応答を受信できませんでした。質問とソースは保持されています。';
+      if (node) updateMessageNode(node, answer);
+      throw error;
+    } finally {
+      try { reader.releaseLock(); } catch { /* already released */ }
+      controller = null;
+      saveState();
+    }
+  }
+  async function submit() {
+    if (busy) { controller?.abort(); return; }
+    const question = els.question.value.trim();
+    const url = els.sourceUrl.value.trim();
+    const pasted = els.code.value;
+    if (!question) return showToast('質問を入力してください。');
+    if (new TextEncoder().encode(pasted).length > MAX_BYTES) return showToast('貼り付けたコードは1 MB以下にしてください。');
+    setBusy(true);
+    let source = current().source;
+    try {
+      if (url) {
+        showToast('URLからソースを取得しています…');
+        source = await fetchSource(url);
+        current().source = { text: source.source, url: source.url, label: source.label || hostOf(source.url), contentType: source.contentType };
+        source = current().source;
+        els.sourceUrl.value = '';
+        updateSourceBadge();
+        saveState();
+      } else if (pasted.trim()) {
+        source = { text: pasted, url: '', label: '貼り付けたコード', contentType: 'text/plain' };
+        current().source = source;
+        updateSourceBadge();
+        saveState();
+      }
+      addMessage('user', question, { sourceLabel: source?.label || '' });
+      els.question.value = '';
+      autoGrow();
+      await streamAnswer(question, source);
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        showToast('生成を停止しました。');
+      } else {
+        showToast(error.message || '処理に失敗しました。');
+        const s = current();
+        const last = [...s.messages].reverse().find(m => m.role === 'assistant' && m.streaming);
+        if (last) {
+          last.streaming = false; last.status = 'エラーが発生しました。質問欄の内容を確認して再送してください。';
+          const node = els.conversation.querySelector(`[data-message-id="${CSS.escape(last.id)}"]`);
+          if (node) updateMessageNode(node, last);
+        }
+      }
+    } finally {
+      setBusy(false);
+      saveState();
+      els.question.focus();
+    }
+  }
+  function autoGrow() { els.question.style.height = 'auto'; els.question.style.height = `${Math.min(els.question.scrollHeight, 180)}px`; }
+  function newChat() {
+    if (busy) return showToast('回答の生成が終わってから新しい調査を始めてください。');
+    const session = makeSession(); state.sessions.unshift(session); state.currentId = session.id; expandedCode = false; els.code.value = ''; els.codeWrap.hidden = true; els.sourceUrl.value = ''; renderConversation(); renderSessions(); saveState(); closeSidebar(); els.question.focus();
+  }
+  function closeSidebar() { els.sidebar.classList.remove('open'); els.backdrop.classList.remove('visible'); }
+
+  els.composer.addEventListener('submit', event => { event.preventDefault(); submit(); });
+  els.question.addEventListener('input', autoGrow);
+  els.question.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); els.composer.requestSubmit(); } });
+  els.toggleCode.addEventListener('click', () => { expandedCode = !expandedCode; els.codeWrap.hidden = !expandedCode; if (expandedCode && current().source?.text && !els.code.value) els.code.value = current().source.text; updateCodeCount(); if (expandedCode) els.code.focus(); });
+  els.code.addEventListener('input', updateCodeCount);
+  els.file.addEventListener('change', async () => {
+    const file = els.file.files?.[0]; if (!file) return;
+    if (file.size > MAX_BYTES) { showToast('ファイルは1 MB以下にしてください。'); els.file.value = ''; return; }
+    try {
+      const text = await file.text();
+      if (new TextEncoder().encode(text).length > MAX_BYTES) throw new Error('文字コード変換後のサイズが1 MBを超えています。');
+      els.code.value = text; els.codeWrap.hidden = false; expandedCode = true; updateCodeCount();
+      if (!els.question.value.trim()) els.question.value = `添付した「${file.name}」を読んで、重要なポイントと質問への提案を教えてください。`;
+      autoGrow(); showToast(`${file.name} を読み込みました。`);
+    } catch (error) { showToast(error.message || 'ファイルを読み込めませんでした。'); }
+    finally { els.file.value = ''; }
+  });
+  els.clearSource.addEventListener('click', () => { if (busy) return showToast('生成中はソースを解除できません。'); current().source = null; els.code.value = ''; els.codeWrap.hidden = true; expandedCode = false; updateSourceBadge(); saveState(); });
+  els.newChat.addEventListener('click', newChat);
+  document.querySelectorAll('.suggestion').forEach(button => button.addEventListener('click', () => { els.question.value = button.dataset.prompt || ''; autoGrow(); els.question.focus(); }));
+  els.conversation.addEventListener('click', async event => {
+    const button = event.target.closest('.copy-answer'); if (!button) return;
+    const message = state.sessions.find(s => s.id === state.currentId)?.messages.find(m => m.id === button.closest('.message')?.dataset.messageId);
+    if (!message) return;
+    try { await navigator.clipboard.writeText(message.content); showToast('回答をコピーしました。'); } catch { showToast('クリップボードへコピーできませんでした。'); }
+  });
+  $('openSidebar').addEventListener('click', () => { els.sidebar.classList.add('open'); els.backdrop.classList.add('visible'); });
+  $('closeSidebar').addEventListener('click', closeSidebar);
+  els.backdrop.addEventListener('click', closeSidebar);
+  document.addEventListener('keydown', event => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); newChat(); } if (event.key === 'Escape') closeSidebar(); });
+
+  renderSessions();
+  renderConversation();
+  updateCodeCount();
+})();
+
+  </script>
+</body>
+</html>
