@@ -45,6 +45,11 @@ html[data-contrast=high] .sidebar,html[data-contrast=high] .topbar,html[data-con
 .st-btn{border:1px solid #4a4b4f;background:transparent;color:#ececec;font-size:13px;border-radius:999px;padding:7px 16px;cursor:pointer;flex-shrink:0}.st-btn:hover{background:#2c2d30}.st-btn.danger{color:#ff7b72;border-color:#6b3a3a}.st-btn.danger:hover{background:#3a2626}
 .st-text{width:100%;min-height:120px;resize:vertical;background:#1a1b1d;border:1px solid #3e3f43;border-radius:10px;color:#ececec;font:13px/1.7 var(--sans);padding:11px 13px;outline:0}.st-text:focus{border-color:#6b6c70}.st-count{font-size:11px;color:#8e8f93;text-align:right}
 @media(max-width:700px){.st-overlay{padding:0}.st-modal{width:100%;height:100dvh;border-radius:0;border:0;flex-direction:column}.st-nav{width:auto;flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid #38393c;padding:10px;gap:8px;overflow:visible}.st-search{display:none}.st-items{flex-direction:row;overflow-x:auto;flex:1;scrollbar-width:none}.st-item{width:auto;white-space:nowrap;padding:0 12px}.st-title{padding:14px 18px 10px}.st-scroll{padding:0 18px 20px}}html[data-theme=light] .tg:after{background:#000}.meter{display:flex;align-items:center;gap:14px}.meter-bar{flex:1;height:8px;border-radius:99px;background:#3a3b3f;overflow:hidden}.meter-bar i{display:block;height:100%;background:var(--amber);border-radius:99px;transition:width .3s}.meter.hot .meter-bar i{background:#e5534b}.meter span{font:12px var(--mono);color:#b5b6ba;min-width:72px;text-align:right}
+.attach-button.on{border-color:var(--amber);color:var(--amber-bright)}
+.edit-panel{margin-top:10px;padding:10px 12px;border:1px solid #64502c;border-radius:8px;background:#1d1c19;font-size:12px;color:var(--soft)}
+.edit-panel button{margin:6px 6px 0 0;padding:5px 10px;border:1px solid #3c4147;border-radius:6px;background:#20242a;cursor:pointer;font-size:11px}
+.edit-panel button:hover{border-color:var(--amber)}
+.edit-panel .note{color:var(--muted);margin-top:6px;white-space:pre-wrap}
   </style>
 <script>
 (function(){
@@ -120,7 +125,7 @@ html[data-contrast=high] .sidebar,html[data-contrast=high] .topbar,html[data-con
             <label class="url-entry"><span class="url-icon">↗</span><input id="sourceUrl" type="url" inputmode="url" placeholder="https://github.com/... — URLからソースを取得" autocomplete="url" aria-label="ソースURL"></label>
             <div class="tool-divider"></div>
             <label class="attach-button" for="fileInput" title="テキスト／コードファイルを添付"><span>＋</span> ファイルを添付<input id="fileInput" type="file" accept=".html,.htm,.txt,.md,.js,.jsx,.ts,.tsx,.css,.json,.py,.go,.rs,.c,.cpp,.java,.php,.vue,.svelte,.xml,.yaml,.yml,.toml,.sh,text/*,application/json" hidden></label>
-            <span class="size-note">最大 1 MB</span>
+            <button type="button" class="attach-button" id="editToggle" aria-pressed="false" title="AIにソースを編集させる"><span>✎</span> AI編集</button><span class="size-note">最大 1 MB</span>
           </div>
           <textarea id="question" rows="2" maxlength="20000" placeholder="何を調べますか？  ソースコードを貼り付けるときは「＋ ファイルを添付」または下の「コードを貼り付け」を使えます。" aria-label="質問" required></textarea>
           <div class="composer-bottom">
@@ -311,7 +316,7 @@ html[data-contrast=high] .sidebar,html[data-contrast=high] .topbar,html[data-con
       body.classList.toggle('stream-cursor', !!message.streaming);
     }
     const extra = node.querySelector('.message-extra');
-    extra.innerHTML = `${message.status ? `<div class="message-status">${escapeHTML(message.status)}</div>` : ''}${message.role === 'assistant' ? renderCitations(message.citations) : ''}${message.role === 'assistant' && !message.streaming && message.content ? '<div class="message-tools"><button class="copy-answer" type="button">回答をコピー</button></div>' : ''}`;
+    extra.innerHTML = `${message.status ? `<div class="message-status">${escapeHTML(message.status)}</div>` : ''}${message.role === 'assistant' ? renderCitations(message.citations) : ''}${message.role === 'assistant' ? editPanel(message) : ''}${message.role === 'assistant' && !message.streaming && message.content ? '<div class="message-tools"><button class="copy-answer" type="button">回答をコピー</button></div>' : ''}`;
   }
   function renderConversation() {
     const s = current();
@@ -374,6 +379,68 @@ html[data-contrast=high] .sidebar,html[data-contrast=high] .topbar,html[data-con
     els.conversation.append(renderMessage(message));
     els.conversation.lastElementChild?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     saveState(); return message;
+  }
+  let editMode = false;
+  const FILE_MARK = '=== FILE: ';
+  const EDIT_PROMPT = ['【編集モード】依頼に沿って参照ソースを修正してください。',
+    '説明は最小限にし、修正は次の形式の編集ブロックだけで出力してください（全文の再出力は禁止）。',
+    '```edit file=ファイル名', '<<<<<<< SEARCH', '元のコード（一字一句同じ）', '=======', '新しいコード', '>>>>>>> REPLACE', '```',
+    'ファイル名は「=== FILE: 名前 ===」の名前をそのまま書きます。SEARCHは対象ファイル内で1か所だけに一致する長さにします。', '', '依頼: '].join('\n');
+  const getFiles = src => src.files?.length ? src.files : [{ name: src.url || src.label || 'source', text: src.text || '' }];
+  const joinFiles = f => f.map(x => `${FILE_MARK}${x.name} ===\n${x.text}`).join('\n\n');
+  // HTMLが参照する外部CSS/JSも /api/fetch で取得して1つのソースにまとめる
+  async function collectAssets(data) {
+    let host = ''; try { host = new URL(data.url).hostname; } catch { return null; }
+    if (host === 'github.com') {
+      const p = data.source.split(/(?:^|\n\n)\/\* ---- (.+?) ---- \*\/\n/), files = [];
+      for (let i = 1; i < p.length; i += 2) files.push({ name: p[i], text: p[i + 1] || '' });
+      return files.length > 1 ? files : null;
+    }
+    if (!/html/i.test(data.contentType || '')) return null;
+    const doc = new DOMParser().parseFromString(data.source, 'text/html');
+    const urls = [...new Set([...doc.querySelectorAll('link[rel~="stylesheet"][href], script[src]')].map(n => {
+      try { return new URL(n.getAttribute('href') || n.getAttribute('src'), data.url).href; } catch { return ''; }
+    }).filter(u => /^https?:/.test(u)))].slice(0, 12);
+    const results = await Promise.allSettled(urls.map(u => fetchSource(u)));
+    const files = [{ name: data.url, text: data.source }];
+    let total = new TextEncoder().encode(data.source).length, skipped = 0;
+    results.forEach((r, i) => {
+      if (r.status !== 'fulfilled') { skipped++; return; }
+      const size = new TextEncoder().encode(r.value.source || '').length;
+      if (total + size > MAX_BYTES) { skipped++; return; }
+      total += size; files.push({ name: urls[i], text: r.value.source });
+    });
+    if (skipped) showToast(`外部ファイル${skipped}件は取得できず（または容量超過で）省略しました。`);
+    return files.length > 1 ? files : null;
+  }
+  function parseEdits(text) {
+    const re = /```edit(?:[ \t]+file=([^\n]*))?\n<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)\n?>>>>>>> REPLACE\s*```/g;
+    const out = []; let m;
+    while ((m = re.exec(text || ''))) out.push({ file: (m[1] || '').trim().replace(/^["'`]|["'`]$/g, ''), search: m[2], replace: m[3] });
+    return out;
+  }
+  function applyEdits(src, edits) {
+    const files = getFiles(src).map(f => ({ ...f })); const report = [];
+    for (const e of edits) {
+      const f = files.find(x => x.name === e.file) || (e.file && files.find(x => x.name.endsWith(e.file))) || (files.length === 1 ? files[0] : null);
+      if (!f) { report.push({ ok: false, why: 'ファイル不明', e }); continue; }
+      if (!e.search) { report.push({ ok: false, why: '削除のみの編集は元に戻せません', e }); continue; }
+      const n = f.text.split(e.search).length - 1;
+      if (n !== 1) { report.push({ ok: false, why: n ? '複数箇所に一致' : '一致なし', e }); continue; }
+      f.text = f.text.replace(e.search, () => e.replace); report.push({ ok: true, e });
+    }
+    return { files, report };
+  }
+  function editPanel(m) {
+    if (m.streaming || !m.edits?.length) return '';
+    const b = (a, t) => `<button type="button" data-edit-act="${a}">${t}</button>`;
+    return `<div class="edit-panel">✎ 編集 ${m.edits.length}件${m.applied ? '（適用済み）' : ''}<div>${m.applied ? b('undo', '元に戻す') : b('apply', '適用')}${b('dl', '編集後をダウンロード')}</div>${m.editNote ? `<div class="note">${escapeHTML(m.editNote)}</div>` : ''}</div>`;
+  }
+  function download(f) {
+    let n = ''; try { n = new URL(f.name).pathname.split('/').filter(Boolean).pop() || 'index.html'; } catch { n = f.name.split('/').pop(); }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([f.text], { type: 'text/plain;charset=utf-8' }));
+    a.download = /\.[A-Za-z0-9]+$/.test(n) ? n : 'source.txt'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }
   async function fetchSource(url) {
     const res = await fetch('/api/fetch', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url }) });
@@ -444,6 +511,7 @@ html[data-contrast=high] .sidebar,html[data-contrast=high] .topbar,html[data-con
       if (!answer.content && !controller.signal.aborted) throw new Error('AIから回答が返りませんでした。もう一度お試しください。');
       answer.streaming = false;
       answer.status = controller.signal.aborted ? '生成を停止しました。続きは質問欄から依頼できます。' : '';
+      answer.edits = parseEdits(answer.content);
       if (node) updateMessageNode(node, answer);
     } catch (error) {
       answer.streaming = false;
@@ -469,7 +537,9 @@ html[data-contrast=high] .sidebar,html[data-contrast=high] .topbar,html[data-con
       if (url) {
         showToast('URLからソースを取得しています…');
         source = await fetchSource(url);
-        current().source = { text: source.source, url: source.url, label: source.label || hostOf(source.url), contentType: source.contentType };
+        const files = await collectAssets(source).catch(() => null);
+        if (files) showToast(`外部CSS/JSを${files.length - 1}件あわせて取得しました。`);
+        current().source = { text: files ? joinFiles(files) : source.source, files, url: source.url, label: source.label || hostOf(source.url), contentType: source.contentType };
         source = current().source;
         els.sourceUrl.value = '';
         updateSourceBadge();
@@ -480,10 +550,11 @@ html[data-contrast=high] .sidebar,html[data-contrast=high] .topbar,html[data-con
         updateSourceBadge();
         saveState();
       }
+      if (editMode && !source?.text) { showToast('編集するソースをURL・添付・貼り付けで指定してください。'); return; }
       addMessage('user', question, { sourceLabel: source?.label || '' });
       els.question.value = '';
       autoGrow();
-      await streamAnswer(question, source);
+      await streamAnswer(editMode ? EDIT_PROMPT + question : question, source);
     } catch (error) {
       if (error.name === 'AbortError') {
         showToast('生成を停止しました。');
@@ -510,6 +581,27 @@ html[data-contrast=high] .sidebar,html[data-contrast=high] .topbar,html[data-con
   }
   function closeSidebar() { els.sidebar.classList.remove('open'); els.backdrop.classList.remove('visible'); }
 
+  $('editToggle').addEventListener('click', e => {
+    editMode = !editMode; e.currentTarget.classList.toggle('on', editMode); e.currentTarget.setAttribute('aria-pressed', String(editMode));
+    showToast(editMode ? 'AI編集モード: 回答の編集ブロックを「適用」できます。' : 'AI編集モードを解除しました。');
+  });
+  els.conversation.addEventListener('click', ev => {
+    const btn = ev.target.closest('[data-edit-act]'); if (!btn) return;
+    const node = btn.closest('[data-message-id]'), s = current(), m = s.messages.find(x => x.id === node?.dataset.messageId), src = s.source;
+    if (!m || !src) return showToast('編集対象のソースがありません。');
+    const act = btn.dataset.editAct;
+    if (act === 'dl') { getFiles(src).forEach(download); return; }
+    const undo = act === 'undo';
+    const list = undo ? m.edits.filter((_, i) => m.okIdx?.includes(i)).map(e => ({ file: e.file, search: e.replace, replace: e.search })).reverse() : m.edits;
+    const { files, report } = applyEdits(src, list);
+    const ok = report.filter(r => r.ok).length;
+    if (ok) { if (src.files) { src.files = files; src.text = joinFiles(files); } else src.text = files[0].text; }
+    if (!undo) m.okIdx = report.map((r, i) => r.ok ? i : -1).filter(i => i >= 0);
+    m.applied = !undo && ok > 0;
+    m.editNote = `${undo ? '元に戻した' : '適用した'}: ${ok}/${list.length}件` + report.filter(r => !r.ok).map(r => `\n✗ ${r.why}: ${r.e.search.slice(0, 40).replace(/\n/g, ' ')}`).join('');
+    if (els.code.value.trim()) { els.code.value = src.text; updateCodeCount(); }
+    updateMessageNode(node, m); updateSourceBadge(); saveState();
+  });
   els.composer.addEventListener('submit', event => { event.preventDefault(); submit(); });
   els.question.addEventListener('input', autoGrow);
   els.question.addEventListener('keydown', event => { if (event.key !== 'Enter' || event.isComposing) return; const mod = event.ctrlKey || event.metaKey; if (settings.enterSend ? !event.shiftKey && !mod : mod) { event.preventDefault(); els.composer.requestSubmit(); } });
