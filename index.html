@@ -380,6 +380,26 @@ html[data-contrast=high] .sidebar,html[data-contrast=high] .topbar,html[data-con
     els.conversation.lastElementChild?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     saveState(); return message;
   }
+  // 英語のエラー（Gemini API・ブラウザ・JS）を日本語にそろえる
+  const JA_ERRORS = [
+    [/api[ _]?key|PERMISSION_DENIED|UNAUTHENTICATED|\b(401|403)\b|permission/i, 'APIキーが無効、または権限がありません。Vercelの環境変数とGoogle AI Studioの設定を確認してください。'],
+    [/quota|RESOURCE_EXHAUSTED|rate.?limit|too many requests|\b429\b/i, 'Geminiの利用上限に達しました。しばらく待つか、設定の「利用制限」で使用状況を確認してください。'],
+    [/overload|UNAVAILABLE|high demand|\b50[023]\b|internal error/i, 'Geminiが混み合っている、または一時的に不調です。少し時間をおいて再試行してください。'],
+    [/safety|blocked|prohibited|recitation/i, '安全性の判定により回答がブロックされました。質問やソースの内容を変えて再試行してください。'],
+    [/timeout|timed out|DEADLINE|abort/i, '時間切れになりました。もう一度お試しください。'],
+    [/model.*(not found|not supported)|\b404\b/i, 'モデルまたはURLが見つかりません。モデル名の設定やURLを確認してください。'],
+    [/INVALID_ARGUMENT|invalid|bad request|too (large|long)|\b(400|413)\b/i, 'リクエストが正しくないか大きすぎます。入力やソースの大きさ（1 MB以内）を確認してください。'],
+    [/failed to fetch|networkerror|load failed|network|ERR_|offline/i, 'ネットワークに接続できません。通信状況を確認して再試行してください。'],
+    [/quotaexceeded|setItem|storage/i, 'ブラウザの保存容量がいっぱいです。古い会話を削除してください。']
+  ];
+  function jaError(raw, fallback) {
+    const m = String(raw || '').trim();
+    if (!m) return fallback || '処理に失敗しました。';
+    if (/[ぁ-んァ-ヶ一-龠]/.test(m)) return m;
+    console.warn('[error]', m);
+    const hit = JA_ERRORS.find(([re]) => re.test(m));
+    return hit ? hit[1] : `エラーが発生しました。（原文: ${m.slice(0, 120)}）`;
+  }
   let editMode = false;
   const FILE_MARK = '=== FILE: ';
   const EDIT_PROMPT = ['【編集モード】依頼に沿って参照ソースを修正してください。',
@@ -559,7 +579,7 @@ html[data-contrast=high] .sidebar,html[data-contrast=high] .topbar,html[data-con
       if (error.name === 'AbortError') {
         showToast('生成を停止しました。');
       } else {
-        showToast(error.message || '処理に失敗しました。');
+        showToast(jaError(error.message, '処理に失敗しました。'));
         const s = current();
         const last = [...s.messages].reverse().find(m => m.role === 'assistant' && m.streaming);
         if (last) {
@@ -616,7 +636,7 @@ html[data-contrast=high] .sidebar,html[data-contrast=high] .topbar,html[data-con
       els.code.value = text; els.codeWrap.hidden = false; expandedCode = true; updateCodeCount();
       if (!els.question.value.trim()) els.question.value = `添付した「${file.name}」を読んで、重要なポイントと質問への提案を教えてください。`;
       autoGrow(); showToast(`${file.name} を読み込みました。`);
-    } catch (error) { showToast(error.message || 'ファイルを読み込めませんでした。'); }
+    } catch (error) { showToast(jaError(error.message, 'ファイルを読み込めませんでした。')); }
     finally { els.file.value = ''; }
   });
   els.clearSource.addEventListener('click', () => { if (busy) return showToast('生成中はソースを解除できません。'); current().source = null; els.code.value = ''; els.codeWrap.hidden = true; expandedCode = false; updateSourceBadge(); saveState(); });
