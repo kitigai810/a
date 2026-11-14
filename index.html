@@ -312,7 +312,7 @@ html[data-contrast=high] .sidebar,html[data-contrast=high] .topbar,html[data-con
     const body = node.querySelector('.message-body');
     if (message.role === 'user') body.textContent = message.content || '';
     else {
-      body.innerHTML = markdownHTML(message.content || '');
+      body.innerHTML = markdownHTML(foldEdits(message));
       body.classList.toggle('stream-cursor', !!message.streaming);
     }
     const extra = node.querySelector('.message-extra');
@@ -433,8 +433,11 @@ html[data-contrast=high] .sidebar,html[data-contrast=high] .topbar,html[data-con
     if (skipped) showToast(`外部ファイル${skipped}件は取得できず（または容量超過で）省略しました。`);
     return files.length > 1 ? files : null;
   }
+  const EDIT_BLOCK = /```edit(?:[ \t]+file=([^\n]*))?\n<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)\n?>>>>>>> REPLACE\s*```/g;
+  // 適用済みの編集ブロックは1行に畳む（元に戻すと再表示）
+  const foldEdits = m => m.applied ? (m.content || '').replace(EDIT_BLOCK, (_, f) => `✎ 編集ブロックを適用済み${f ? `（${f.trim()}）` : ''}\n`) : (m.content || '');
   function parseEdits(text) {
-    const re = /```edit(?:[ \t]+file=([^\n]*))?\n<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)\n?>>>>>>> REPLACE\s*```/g;
+    const re = new RegExp(EDIT_BLOCK.source, 'g');
     const out = []; let m;
     while ((m = re.exec(text || ''))) out.push({ file: (m[1] || '').trim().replace(/^["'`]|["'`]$/g, ''), search: m[2], replace: m[3] });
     return out;
